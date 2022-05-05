@@ -34,7 +34,7 @@
 
 #include <common/Functions.h>
 
-#define DECODERFFMPEG_DEBUG_OUTPUT 0
+#define DECODERFFMPEG_DEBUG_OUTPUT 1
 #if DECODERFFMPEG_DEBUG_OUTPUT && !NDEBUG
 #include <QDebug>
 #define DEBUG_FFMPEG(f) qDebug() << f
@@ -58,7 +58,10 @@ decoderFFmpeg::decoderFFmpeg(FFmpeg::AVCodecIDWrapper   codecID,
   // loading the libraries which is slow and uses a lot of memory.
   this->ff.loadFFmpegLibraries();
   if (!this->ff.loadingSuccessfull())
+  {
+    this->setError("Error loading library.");
     return;
+  }
 
   // Create the cofiguration parameters
   auto codecpar = this->ff.allocCodecParameters();
@@ -101,7 +104,10 @@ decoderFFmpeg::decoderFFmpeg(FFmpeg::AVCodecParametersWrapper codecpar, bool cac
   // loading the libraries which is slow and uses a lot of memory.
   this->ff.loadFFmpegLibraries();
   if (!this->ff.loadingSuccessfull())
+  {
+    this->setError("Error loading library.");
     return;
+  }
 
   auto codecID    = this->ff.getCodecIDWrapper(codecpar.getCodecID());
   this->codecName = codecID.getCodecName();
@@ -129,6 +135,8 @@ decoderFFmpeg::~decoderFFmpeg()
 void decoderFFmpeg::resetDecoder()
 {
   if (this->decoderState == DecoderState::Error)
+    return;
+  if (!this->ff.loadingSuccessfull())
     return;
 
   DEBUG_FFMPEG("decoderFFmpeg::resetDecoder");
